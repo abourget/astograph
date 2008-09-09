@@ -22,6 +22,10 @@ for l in sys.stdin.readlines():
     inc = incmatch.match(l)
 
     if ctx:
+        if ctx.group(1) in ['general', 'globals']:
+            curctx = None
+            continue
+
         curctx = ctx.group(1)
         contexts.append(curctx)
     if inc:
