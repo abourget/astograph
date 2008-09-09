@@ -1,5 +1,8 @@
 #!/usr/bin/python
-
+# -=- encoding: utf-8 -=-
+# GPLv3 code
+# Copyright: Alexandre Bourget (c) 2008
+#
 import os
 import re
 import sys
@@ -34,12 +37,12 @@ for l in sys.stdin.readlines():
 dot = []
 dot.append('digraph asterisk {\n')
 for x in contexts:
-    dot.append('  %s [label="%s"];\n' % (x, x))
+    dot.append('  "%s" [label="%s"];\n' % (x, x))
 
 dot.append('\n')
 
 for x in links:
-    dot.append('  %s -> %s;\n' % (x[0], x[1]))
+    dot.append('  "%s" -> "%s";\n' % (x[0], x[1].strip()))
 
 dot.append('}\n')
 
