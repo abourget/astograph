@@ -9,9 +9,6 @@ import sys
 
 # POINTS OF FAILURE: when a multi-line comment comments out some include and context statements
 
-# TODO: load the extensions.conf stuff. (from stdin, so you can just spit out anything there)
-
-
 contexts = []
 links = []
 
@@ -32,8 +29,6 @@ for l in sys.stdin.readlines():
             raise Exception("include should not happen before a context definition")
         links.append((curctx, inc.group(1)))
         
-# TODO: create a list of unique contexts,
-# TODO: collect the include => statements
 dot = []
 dot.append('digraph asterisk {\n')
 for x in contexts:
