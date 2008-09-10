@@ -24,6 +24,9 @@ import sys
 
 # POINTS OF FAILURE: when a multi-line comment comments out some include and context statements
 
+internal_contexts = ['parkedcalls']
+
+
 contexts = []
 links = []
 
@@ -42,11 +45,25 @@ for l in sys.stdin.readlines():
             continue
 
         curctx = ctx.group(1)
-        contexts.append(curctx)
+
+        # Don't add macro- stuff.
+        if curctx.startswith('macro-'):
+            continue
+
+        # Don't add it twice.
+        if curctx not in contexts:
+            contexts.append(curctx)
+
     if inc:
         if not curctx:
             raise Exception("include should not happen before a context definition")
-        links.append((curctx, inc.group(1)))
+        incctx = inc.group(1)
+
+        # Add the internal contexts if we talk about them (like parkedcalls)OA
+        if incctx in internal_contexts and incctx not in contexts:
+            contexts.append(incctx)
+
+        links.append((curctx, incctx))
         
 dot = []
 dot.append('digraph asterisk {\n')
