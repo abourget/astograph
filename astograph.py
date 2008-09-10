@@ -30,14 +30,31 @@ internal_contexts = ['parkedcalls']
 contexts = []
 links = []
 
+# Match context opening things..
 ctxmatch = re.compile(r'\[([^ ]+)\]')
+# Match include calls..
 incmatch = re.compile(r'^include ?=> ?([^ ]+)')
+# Match Return() calls (consider this section as a macro)
+retmatch = re.compile(r',Return\(\)')
 
 curctx = None
 for l in sys.stdin.readlines():
     # TODO: work out the comments (especially the multi-line comments)
     ctx = ctxmatch.match(l)
     inc = incmatch.match(l)
+    ret = retmatch.search(l)
+
+    if ret:
+        # Ok, we were in a Macro, make sure the context is not added.
+        retctx = curctx
+
+        if retctx in contexts:
+            contexts.remove(retctx)
+            
+        # TODO: to be turbo safe, we should check the `links` to make
+        # sure nothing was included from this macro context, but usually,
+        # if you've created them with AEL2, you should never have an `include`
+        # in the macro (or the sub)
 
     if ctx:
         if ctx.group(1) in ['general', 'globals']:
