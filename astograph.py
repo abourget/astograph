@@ -21,8 +21,12 @@
 import os
 import re
 import sys
+import pdb
+
 
 # POINTS OF FAILURE: when a multi-line comment comments out some include and context statements
+# NOTE: the Goto things must be separated correctly with ? (and possibly ':'), and the goto destinations
+#       must be correctly split with commas (,)
 # TODO: add switch => support...
 
 internal_contexts = ['parkedcalls']
@@ -38,15 +42,35 @@ incmatch = re.compile(r'^include ?=> ?([^ ]+)')
 # Match Return() calls (consider this section as a macro)
 retmatch = re.compile(r',Return\(\)')
 # Peak at Gotos, make sure it's not in comments..
-gotomatch = re.compile(r'(;?)[^;]*Goto')
+gotomatch = re.compile(r'(;?)[^;]+Goto(If(Time)?)?\((.+)\)\s*(;.*)?$', re.IGNORECASE | re.VERBOSE)
+
+readfrom = sys.stdin
+readfrom = open('extensions.conf')
+
+def add_goto_context(curctx, newctx):
+    """Just takes the ones with three arguments, and take the first.
+    Add only if valid and not already linked within 'links'."""
+
+    global contexts
+    global links
+
+    spl = newctx.split(',')
+
+    if len(spl) == 3:
+        # This is a context where we jump
+        # TODO: add (curctx, spl[0], 'dotted')
+        type1 = (curctx, spl[0])
+        type2 = (curctx, spl[0], 'dotted')
+        if type1 not in links and type2 not in links:
+            links.append((curctx, spl[0], 'dotted'))
 
 curctx = None
-for l in sys.stdin.readlines():
+for l in readfrom.readlines():
     # TODO: work out the comments (especially the multi-line comments)
     ctx = ctxmatch.match(l)
     inc = incmatch.match(l)
     ret = retmatch.search(l)
-    gto = gotomatch.search(l)
+    gto = gotomatch.search(l.strip())
 
     if ret:
         # Ok, we were in a Macro, make sure the context is not added.
@@ -59,6 +83,8 @@ for l in sys.stdin.readlines():
         # sure nothing was included from this macro context, but usually,
         # if you've created them with AEL2, you should never have an `include`
         # in the macro (or the sub)
+
+        continue
 
     if ctx:
         if ctx.group(1) in ['general', 'globals']:
@@ -75,6 +101,8 @@ for l in sys.stdin.readlines():
         if curctx not in contexts:
             contexts.append(curctx)
 
+        continue
+
     if inc:
         if not curctx:
             raise Exception("include should not happen before a context definition")
@@ -84,16 +112,44 @@ for l in sys.stdin.readlines():
         if incctx in internal_contexts and incctx not in contexts:
             contexts.append(incctx)
 
-        links.append((curctx, incctx))
+        links.append((curctx, incctx, ''))
+
+        continue
 
     if gto:
-        # Add link with style=dotted
-        pass
+        # Skip commented out lines with Goto..
+        if gto.group(1) == ';':
+            continue
+
+        # Let's parse TIME stuff..
+        if gto.group(3):
+            chkctx = gto.group(4).split('?')[-1]
+            add_goto_context(curctx, chkctx)
+        # Let's do GotoIf parsing..
+        elif gto.group(2):
+            chks = gto.group(4).split('?')[-1].split(':')
+            add_goto_context(curctx, chks[0])
+
+            # A second possible destination ?
+            if len(chks) == 2:
+                add_goto_context(curctx, chks[1])
+
+        # Standard Goto parsing.. go ahead..
+        else:
+            chkctx = gto.group(4)
+            add_goto_context(curctx, chkctx)
+            
+       
+        ### Add links with style=dotted
+        # make sure there's no ';' in front of the Goto
+        # Check from the end the presence of a ? (got GotoIf), then parse the two possibilities, add two
+        # Check the (curctx, gotoctx, '') doesn't exist in links (or as (curctx, gotoctx, 'style=dotted'))
+        # then add it there..
 
         
 dot = []
 dot.append('digraph asterisk {\n')
-dot.append('  rankdir =LR;\n')
+#dot.append('  rankdir = LR;\n')
 
 for x in contexts:
     dot.append('  "%s" [label="%s"];\n' % (x, x))
@@ -101,7 +157,10 @@ for x in contexts:
 dot.append('\n')
 
 for x in links:
-    dot.append('  "%s" -> "%s";\n' % (x[0], x[1].strip()))
+    add = ''
+    if len(x) == 3:
+        add = ' [style="%s"]' % x[2]
+    dot.append('  "%s" -> "%s"%s;\n' % (x[0], x[1].strip(), add))
 
 dot.append('}\n')
 
