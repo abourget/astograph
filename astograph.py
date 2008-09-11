@@ -23,6 +23,7 @@ import re
 import sys
 
 # POINTS OF FAILURE: when a multi-line comment comments out some include and context statements
+# TODO: add switch => support...
 
 internal_contexts = ['parkedcalls']
 
@@ -36,6 +37,8 @@ ctxmatch = re.compile(r'\[([^ ]+)\]')
 incmatch = re.compile(r'^include ?=> ?([^ ]+)')
 # Match Return() calls (consider this section as a macro)
 retmatch = re.compile(r',Return\(\)')
+# Peak at Gotos, make sure it's not in comments..
+gotomatch = re.compile(r'(;?)[^;]*Goto')
 
 curctx = None
 for l in sys.stdin.readlines():
@@ -43,6 +46,7 @@ for l in sys.stdin.readlines():
     ctx = ctxmatch.match(l)
     inc = incmatch.match(l)
     ret = retmatch.search(l)
+    gto = gotomatch.search(l)
 
     if ret:
         # Ok, we were in a Macro, make sure the context is not added.
@@ -81,9 +85,16 @@ for l in sys.stdin.readlines():
             contexts.append(incctx)
 
         links.append((curctx, incctx))
+
+    if gto:
+        # Add link with style=dotted
+        pass
+
         
 dot = []
 dot.append('digraph asterisk {\n')
+dot.append('  rankdir =LR;\n')
+
 for x in contexts:
     dot.append('  "%s" [label="%s"];\n' % (x, x))
 
