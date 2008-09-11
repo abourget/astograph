@@ -112,7 +112,7 @@ for l in readfrom.readlines():
         if incctx in internal_contexts and incctx not in contexts:
             contexts.append(incctx)
 
-        links.append((curctx, incctx, ''))
+        links.append((curctx, incctx))
 
         continue
 
@@ -159,7 +159,7 @@ dot.append('\n')
 for x in links:
     add = ''
     if len(x) == 3:
-        add = ' [style="%s"]' % x[2]
+        add = ' [style="%s", constraint=false]' % x[2]
     dot.append('  "%s" -> "%s"%s;\n' % (x[0], x[1].strip(), add))
 
 dot.append('}\n')
