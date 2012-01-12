@@ -1,0 +1,23 @@
+digraph asterisk {
+  "context1" [label="context1"];
+  "context2" [label="context2"];
+  "context3" [label="context3"];
+  "company1" [label="company1"];
+  "features" [label="features"];
+  "special-features" [label="special-features"];
+  "tiny_features" [label="tiny_features"];
+  "company2" [label="company2"];
+
+  "context1" -> "features";
+  "context2" -> "features";
+  "context3" -> "special-features";
+  "company1" -> "features";
+  "company1" -> "special-features";
+  "company1" -> "tiny_features";
+  "company1" -> "context3";
+  "special-features" -> "tiny_features";
+  "special-features" -> "context1" [style="dotted", constraint=false];
+  "special-features" -> "company1" [style="dotted", constraint=false];
+  "company2" -> "features";
+  "company2" -> "tiny_features";
+}
