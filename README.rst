@@ -18,7 +18,7 @@ and the following command:
 
 Make sure you have ``GraphViz`` installed for ``dot``, and you should get this:
 
-.. image:: graph.png
+.. image:: https://github.com/abourget/astograph/blob/master/graph.png
 
 Dotted lines mean Possible Gotos and solid lines mean Context inclusions.
 
@@ -30,5 +30,5 @@ Second example
 
 Here is another example, written in the Digium Advanced Training Class:
 
-.. image:: example.png
+.. image:: https://github.com/abourget/astograph/blob/master/example.png
 
